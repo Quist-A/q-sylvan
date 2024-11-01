@@ -1,8 +1,7 @@
-#ifndef CMAP_H
-#define CMAP_H
+#ifndef QISQ2_MAP_H
+#define QISQ2_MAP_H
 
 /**
-\file cmap.h
 \brief Lockless non-resizing hash table implementation for fixed-length keys
 
 @inproceedings{Laarman:2010:BMR:1998496.1998541,
@@ -24,22 +23,27 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <gmp.h>
 #include "flt.h"
 
+typedef struct {
+  mpq_t a;
+  mpq_t b;
+  mpq_t c;
+  mpq_t d;
+} qisq2_t;
 
 /**
 \brief Create a new database.
 \param len The length of the vectors to be stored here
 \return the hashtable
 */
-extern void *cmap_create(uint64_t size, double tolerance);
-
-extern double cmap_get_tolerance();
+extern void *qisq2_map_create(uint64_t size, double tolerance);
 
 /**
 \brief Free the memory used by a dbs.
 */
-extern void cmap_free(void *dbs);
+extern void qisq2_map_free(void *dbs);
 
 /**
 \brief Find a vector with respect to a database and insert it if it cannot be fo
@@ -49,12 +53,14 @@ und.
 \retval idx The index that the vector was found or inserted at
 \return 1 if the vector was present, 0 if it was added, -1 if table was full
 */
-extern int cmap_find_or_put(const void *dbs, const void *v, uint64_t *ret);
+extern int qisq2_map_find_or_put(const void *dbs, const void *v, uint64_t *ret);
 
-extern void * cmap_get(const void *dbs, const uint64_t ref);
+extern void * qisq2_map_get(const void *dbs, const uint64_t ref);
 
-extern uint64_t cmap_count_entries(const void *dbs);
+extern uint64_t qisq2_map_count_entries(const void *dbs);
 
-extern void print_bitvalues(const void *dbs, const uint64_t ref);
+extern void qisq2_map_print_bitvalues(const void *dbs, const uint64_t ref);
 
-#endif // CMAP
+extern double qisq2_map_get_tolerance();
+
+#endif // QISQ2_MAP

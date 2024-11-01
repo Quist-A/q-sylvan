@@ -1,4 +1,4 @@
-#include "cmap.h"
+#include "qisq2_map.h"
 
 #include <assert.h>
 #include <inttypes.h>
@@ -10,7 +10,6 @@
 #include <math.h>
 
 #include "atomics.h"
-#include "cmap.h"
 #include "fast_hash.h"
 #include "util.h"
 
@@ -21,10 +20,10 @@
 #define CACHE_LINE_SIZE 256
 
 // how many "blocks" of 64 bits for a single table entry
-#define entry_size (2*sizeof(fl_t)/8)
+#define entry_size (4*sizeof(uint64_t)/8)
 
 typedef union {
-    complex_t       c;
+    qisq2_t         c;
     uint64_t        d[entry_size];
 } bucket_t;
 
@@ -37,8 +36,8 @@ static const uint64_t CL_MASK = -(1ULL << CACHE_LINE);
 /**
 \typedef Lockless hastable database.
 */
-typedef struct cmap_s cmap_t;
-struct cmap_s {
+typedef struct qisq2_map_s qisq2_map_t;
+struct qisq2_map_s {
     size_t              size;
     size_t              mask;
     size_t              threshold;
@@ -47,12 +46,6 @@ struct cmap_s {
     // Q: should this 32 change to 16 now that we use doubles instead of
     // long doubles for the real and imaginary components?
 };
-
-static void __attribute__((unused))
-print_bucket_floats(bucket_t *b)
-{
-    printf("%.60Lf, %.60Lf\n", (long double) b->c.r, (long double) b->c.i);
-}
 
 static void __attribute__((unused))
 print_bucket_bits(bucket_t* b)
@@ -64,65 +57,30 @@ print_bucket_bits(bucket_t* b)
     printf("\n");
 }
 
-double
-cmap_get_tolerance()
-{
-    return TOLERANCE;
-}
-
-static bool
-complex_close(complex_t *in_table, const complex_t* to_insert)
-{
-    if (TOLERANCE == 0.0) {
-         return ((in_table->r == to_insert->r) && 
-                 (in_table->i == to_insert->i));
-    }
-    else {
-        return ((flt_abs(in_table->r - to_insert->r) < TOLERANCE) && 
-                (flt_abs(in_table->i - to_insert->i) < TOLERANCE));
-    }
-    
-}
 
 int
-cmap_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
+qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
 {
-    complex_t *v = (complex_t *) _v;
-    cmap_t *cmap = (cmap_t *) dbs;
+    qisq2_t *v = (qisq2_t *)_v;
+    qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
     bucket_t *val  = (bucket_t *) v;
 
-    // Round the value to compute the hash with, but store the actual value v
-    bucket_t round_v;
-    if (TOLERANCE == 0.0) {
-        round_v.c.r = v->r;
-        round_v.c.i = v->i;
-    }
-    else {
-        round_v.c.r = flt_round(v->r / TOLERANCE) * TOLERANCE;
-        round_v.c.i = flt_round(v->i / TOLERANCE) * TOLERANCE;
-    }
-
-    // fix 0 possibly having a sign
-    if(round_v.c.r == 0.0) round_v.c.r = 0.0;
-    if(round_v.c.i == 0.0) round_v.c.i = 0.0;
-
-    //printf("(%.3f,%.3f) ",(float)round_v.c.r,(float)round_v.c.i);
-    //print_bucket_bits(&round_v); 
-    
-    uint32_t hash  = SuperFastHash(&round_v, sizeof(complex_t), 0);
+    // TODO: compute hash based on values (not on pointers)
+    uint32_t hash = 0;
+    //uint32_t hash  = SuperFastHash(&round_v, sizeof(complex_t), 0);
     uint32_t prime = odd_primes[hash & PRIME_MASK];
 
     assert (val->d[0] != LOCK);
     assert (val->d[0] != EMPTY);
 
     // Insert/lookup `v`
-    for (unsigned int c = 0; c < cmap->threshold; c++) {
-        uint64_t            ref = hash & cmap->mask;
+    for (unsigned int c = 0; c < qisq2_map->threshold; c++) {
+        uint64_t            ref = hash & qisq2_map->mask;
         uint64_t            line_end = (ref & CL_MASK) + CACHE_LINE_SIZE;
         for (size_t i = 0; i < CACHE_LINE_SIZE; i++) {
             
             // 1. Get bucket
-            bucket_t *bucket = &cmap->table[ref];
+            bucket_t *bucket = &qisq2_map->table[ref];
 
             // 2. If bucket empty, insert new value here
             if (bucket->d[0] == EMPTY) {
@@ -140,8 +98,9 @@ cmap_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
             while (atomic_read(&bucket->d[0]) == LOCK) {}
 
             // 4. Bucket contains some complex value, check if close to `v`
-            complex_t *in_table = (complex_t *)bucket;
-            if (complex_close(in_table, v)) {
+            qisq2_t *in_table = (qisq2_t *)bucket;
+            if (false) {
+                // TODO: decide if values equal
                 *ret = ref;
                 return 1;
             }
@@ -157,29 +116,29 @@ cmap_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
 }
 
 void *
-cmap_get(const void *dbs, const uint64_t ref)
+qisq2_map_get(const void *dbs, const uint64_t ref)
 {
-    cmap_t *cmap = (cmap_t *) dbs;
-    return &(cmap->table[ref].c);
+    qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
+    return &(qisq2_map->table[ref].c);
 }
 
 uint64_t
-cmap_count_entries(const void *dbs)
+qisq2_map_count_entries(const void *dbs)
 {
-    cmap_t *cmap = (cmap_t *) dbs;
+    qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
     uint64_t entries = 0;
-    for (unsigned int c = 0; c < cmap->size; c++) {
-        if (cmap->table[c].d[0] != EMPTY)
+    for (unsigned int c = 0; c < qisq2_map->size; c++) {
+        if (qisq2_map->table[c].d[0] != EMPTY)
             entries++;
     }
     return entries;
 }
 
 void
-print_bitvalues(const void *dbs, const uint64_t ref)
+qisq2_map_print_bitvalues(const void *dbs, const uint64_t ref)
 {
-    cmap_t *cmap = (cmap_t *) dbs;
-    bucket_t* b = cmap_get(cmap, ref);
+    qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
+    bucket_t *b = (bucket_t *) qisq2_map_get(qisq2_map, ref);
     printf("%016" PRIu64, b->d[0]);
     for (unsigned int k = 1; k < entry_size; k++) {
         printf(" %016" PRIu64, b->d[k]);
@@ -187,26 +146,31 @@ print_bitvalues(const void *dbs, const uint64_t ref)
 }
 
 void *
-cmap_create(uint64_t size, double tolerance)
+qisq2_map_create(uint64_t size, double tolerance)
 {
-    TOLERANCE = tolerance;
-    cmap_t  *cmap = calloc (1, sizeof(cmap_t));
-    cmap->size = size;
-    cmap->mask = cmap->size - 1;
-    cmap->table = calloc (cmap->size, sizeof(bucket_t));
-    for (unsigned int c = 0; c < cmap->size; c++) {
-        cmap->table[c].d[0] = EMPTY;
+    qisq2_map_t  *qisq2_map = calloc (1, sizeof(qisq2_map_t));
+    qisq2_map->size = size;
+    qisq2_map->mask = qisq2_map->size - 1;
+    qisq2_map->table = calloc (qisq2_map->size, sizeof(bucket_t));
+    for (unsigned int c = 0; c < qisq2_map->size; c++) {
+        qisq2_map->table[c].d[0] = EMPTY;
     }
-    cmap->threshold = cmap->size / 100;
-    cmap->threshold = min(cmap->threshold, 1ULL << 16);
-    cmap->seen_0 = 0;
-    return (void *) cmap;
+    qisq2_map->threshold = qisq2_map->size / 100;
+    qisq2_map->threshold = min(qisq2_map->threshold, 1ULL << 16);
+    qisq2_map->seen_0 = 0;
+    return (void *) qisq2_map;
 }
 
 void
-cmap_free(void *dbs)
+qisq2_map_free(void *dbs)
 {
-    cmap_t * cmap = (cmap_t *) dbs;
-    free (cmap->table);
-    free (cmap);
+    qisq2_map_t * qisq2_map = (qisq2_map_t *) dbs;
+    free (qisq2_map->table);
+    free (qisq2_map);
+}
+
+double
+qisq2_map_get_tolerance()
+{
+    return 0;
 }
