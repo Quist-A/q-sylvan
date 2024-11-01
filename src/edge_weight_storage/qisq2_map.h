@@ -26,6 +26,9 @@
 #include <gmp.h>
 #include "flt.h"
 
+/**
+\param Rationals (a,b,c,d) represent the number a + b sqrt(2) + c i + d i sqrt(2)
+*/
 typedef struct {
   mpq_t a;
   mpq_t b;
