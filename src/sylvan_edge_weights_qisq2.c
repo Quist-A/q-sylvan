@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "sylvan_edge_weights_qisq2.h"
+#include <sylvan_edge_weights_qisq2.h>
 
 
 /**********************<Some static utility functions>*************************/
@@ -58,7 +58,25 @@ _weight_qisq2_value(void *wgt_store, EVBDD_WGT a, qisq2_t *res)
 EVBDD_WGT
 _weight_qisq2_lookup_ptr(qisq2_t *a, void *wgt_store)
 {
-    // TODO
+    // TODO: catch czero() / cone() here?
+    uint64_t res;
+    bool success;
+
+    int present = wgt_store_find_or_put(wgt_store, a, &res);
+    if (present == -1) {
+        success = false;
+    } else if (present == 0) { 
+        success = true;
+        wgt_table_gc_inc_entries_estimate();
+    } else {
+        success = true;
+    }
+
+    if (!success) {
+        fprintf(stderr, "Amplitude table full!\n");
+        exit(1);
+    }
+    return (EVBDD_WGT) res; 
 }
 
 EVBDD_WGT
