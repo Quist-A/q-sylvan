@@ -18,6 +18,27 @@ comp_cart_to_polar(fl_t r, fl_t i, fl_t *magnitude, fl_t *angle)
 
 /*****************<Implementation of edge_weights interface>*******************/
 
+void qisq2_init(qisq2_t *num) {
+    mpq_init(num->a);
+    mpq_init(num->b);
+    mpq_init(num->c);
+    mpq_init(num->d);
+}
+
+void qisq2_clear(qisq2_t *num) {
+    mpq_clear(num->a);
+    mpq_clear(num->b);
+    mpq_clear(num->c);
+    mpq_clear(num->d);
+}
+
+void qisq2_reduce(qisq2_t *num) {
+    mpq_canonicalize(num->a);
+    mpq_canonicalize(num->b);
+    mpq_canonicalize(num->c);
+    mpq_canonicalize(num->d);
+}
+
 qisq2_t *
 weight_qisq2_malloc()
 {
@@ -28,7 +49,10 @@ weight_qisq2_malloc()
 void
 _weight_qisq2_value(void *wgt_store, EVBDD_WGT a, qisq2_t *res)
 {
-    // TODO
+    if (a == EVBDD_ZERO)         *res = qisq2_zero();
+    else if (a == EVBDD_ONE)     *res = qisq2_one();
+    else if (a == EVBDD_MIN_ONE) *res = qisq2_mone();
+    *res = *(qisq2_t*)(wgt_store_get(wgt_store, a)); // ?
 }
 
 EVBDD_WGT
@@ -57,10 +81,10 @@ void
 weight_qisq2_abs(qisq2_t *a)
 {
     qisq2_t *temp;
-    init(temp);
+    qisq2_init(temp);
     complexConjugate(temp,a);
     weight_qisq2_mul(a,temp);
-    clear(temp);
+    qisq2_clear(temp);
 }
 
 void
@@ -70,7 +94,7 @@ weight_qisq2_neg(qisq2_t *num)
     mpq_neg(num->b, num->b);
     mpq_neg(num->c, num->c);
     mpq_neg(num->d, num->d);
-    reduce(num);
+    qisq2_reduce(num);
 }
 
 void
@@ -78,7 +102,7 @@ weight_qisq2_conj(qisq2_t *x)
 {
     mpq_neg(x->c, x->c);
     mpq_neg(x->d, x->d);
-    reduce(x);
+    qisq2_reduce(x);
 }
 
 void
@@ -94,7 +118,7 @@ weight_qisq2_add(qisq2_t *x, qisq2_t *y)
     mpq_add(x->b, x->b, y->b);
     mpq_add(x->c, x->c, y->c);
     mpq_add(x->d, x->d, y->d);
-    reduce(x);
+    qisq2_reduce(x);
 }
 
 void
@@ -104,14 +128,14 @@ weight_qisq2_sub(qisq2_t *x, qisq2_t *y)
     mpq_sub(x->b, x->b, y->b);
     mpq_sub(x->c, x->c, y->c);
     mpq_sub(x->d, x->d, y->d);
-    reduce(x);
+    qisq2_reduce(x);
 }
 
 void
 weight_qisq2_mul(qisq2_t *x, qisq2_t *y)
 {
     qisq2_t *result;
-    init(result);
+    qisq2_init(result);
     mpq_t temp;
     mpq_init(temp);
     mpq_t two;
@@ -168,10 +192,10 @@ weight_qisq2_mul(qisq2_t *x, qisq2_t *y)
     mpq_clear(temp);
     mpq_clear(two);
 
-    reduce(result);
+    qisq2_reduce(result);
     *x = *result;
 
-    mpq_clear(result);
+    qisq2_clear(result);
 
 }
 
@@ -182,7 +206,7 @@ complexConjugate(qisq2_t *result, qisq2_t *x) {
     mpq_neg(result->c, x->c);
     mpq_neg(result->d, x->d);
     
-    reduce(result);
+    qisq2_reduce(result);
 }
 
 void
@@ -193,16 +217,16 @@ sqrttwoConjugate(qisq2_t *result, qisq2_t *x) {
     mpq_set(result->c, x->c);
     mpq_neg(result->d, x->d);
 
-    reduce(result);
+    qisq2_reduce(result);
 }
 
 void
 weight_qisq2_div(qisq2_t *x, qisq2_t *y)
 {
     qisq2_t *temp, *cc, *sc;
-    init(temp); 
-    init(cc); 
-    init(sc);
+    qisq2_init(temp); 
+    qisq2_init(cc); 
+    qisq2_init(sc);
 
     *temp = *y;
 
@@ -218,16 +242,16 @@ weight_qisq2_div(qisq2_t *x, qisq2_t *y)
     weight_qisq2_mul(x, cc);
     weight_qisq2_mul(x, sc);
 
-    clear(cc);
-    clear(sc);
+    qisq2_clear(cc);
+    qisq2_clear(sc);
 
     // calculate 1/y
     mpq_inv(temp->a, temp->a);
 
     weight_qisq2_mul(x, temp);
-    clear(temp);
+    qisq2_clear(temp);
     
-    reduce(x);
+    qisq2_reduce(x);
 }
 
 bool
