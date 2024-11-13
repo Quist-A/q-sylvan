@@ -63,7 +63,20 @@ GATE_OPID_64(uint32_t gateid, BDDVAR a, BDDVAR b, BDDVAR c, BDDVAR d, BDDVAR e)
 void
 qsylvan_init_simulator(size_t min_tablesize, size_t max_tablesize, double wgt_tab_tolerance, int edge_weigth_backend, int norm_strat)
 {
-    sylvan_init_evbdd(min_tablesize, max_tablesize, wgt_tab_tolerance, edge_weigth_backend, norm_strat, &qmdd_gates_init);
+    switch (edge_weigth_backend)
+    {
+    case COMP_HASHMAP:
+        sylvan_init_evbdd(min_tablesize, max_tablesize, wgt_tab_tolerance, edge_weigth_backend, norm_strat, &qmdd_gates_init);
+        break;
+    case QISQ2_MAP:
+        if (norm_strat == NORM_L2){
+            printf("Invalid L2 norm for Qisq2 numbers!");
+            exit(0);
+        }
+        sylvan_init_evbdd(min_tablesize, max_tablesize, wgt_tab_tolerance, edge_weigth_backend, norm_strat, &qmdd_gates_qisq2_init);
+        break;
+    }
+    
 }
 
 void
