@@ -42,6 +42,7 @@ static inline qisq2_t qisq2_make(int64_t anum, int64_t aden, int64_t bnum, int64
     mpq_set_si(res.b, bnum, bden);
     mpq_set_si(res.c, cnum, cden);
     mpq_set_si(res.d, dnum, dden);
+	qisq2_reduce(&res);
     return res;
 }
 
