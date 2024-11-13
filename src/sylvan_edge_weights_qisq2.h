@@ -25,25 +25,10 @@ void weight_qisq2_div(qisq2_t *a, qisq2_t *b);
 bool weight_qisq2_eq(qisq2_t *a, qisq2_t *b);
 bool weight_qisq2_eps_close(qisq2_t *a, qisq2_t *b, double eps);
 bool weight_qisq2_greater(qisq2_t *a, qisq2_t *b);
-
-EVBDD_WGT wgt_qisq2_norm_L2(EVBDD_WGT *low, EVBDD_WGT *high);
-EVBDD_WGT wgt_qisq2_get_low_L2normed(EVBDD_WGT high);
+void weight_qisq2_complexConjugate(qisq2_t *result, qisq2_t *x);
+void weight_qisq2_sqrttwoConjugate(qisq2_t *result, qisq2_t *x);
 
 void weight_qisq2_fprint(FILE *stream, qisq2_t *a);
-
-static inline EVBDD_WGT
-qisq2_lookup_angle(fl_t theta, fl_t mag)
-{
-	qisq2_t c; //= cmake_angle(theta, mag);
-	return weight_lookup(&c);
-}
-
-static inline EVBDD_WGT
-qisq2_lookup(fl_t r, fl_t i)
-{
-	qisq2_t c;// = cmake(r, i);
-	return weight_lookup(&c);
-}
 
 void qisq2_init(qisq2_t *num);
 void qisq2_clear(qisq2_t *num);
@@ -59,6 +44,16 @@ static inline qisq2_t qisq2_make(int64_t anum, int64_t aden, int64_t bnum, int64
     mpq_set_si(res.d, dnum, dden);
     return res;
 }
+
+static inline EVBDD_WGT
+qisq2_lookup(int64_t anum, int64_t aden, int64_t bnum, int64_t bden, int64_t cnum, int64_t cden, int64_t dnum, int64_t dden)
+{
+	qisq2_t c;
+	c = qisq2_make(anum, aden, bnum, bden, cnum, cden, dnum, dden);
+	//TODO: memory leakage is here, because c is initialized but not cleared
+	return weight_lookup(&c);
+}
+
 static inline qisq2_t qisq2_zero() { return qisq2_make( 0, 1, 0, 1, 0, 1, 0, 1); }
 static inline qisq2_t qisq2_one()  { return qisq2_make( 1, 1, 0, 1, 0, 1, 0, 1); }
 static inline qisq2_t qisq2_mone() { return qisq2_make(-1, 1, 0, 1, 0, 1, 0, 1); }
