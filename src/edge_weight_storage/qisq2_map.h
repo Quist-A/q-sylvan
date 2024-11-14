@@ -49,6 +49,11 @@ extern void *qisq2_map_create(uint64_t size, double tolerance);
 extern void qisq2_map_free(void *dbs);
 
 /**
+\brief Free the memory used by an element in a dbs.
+*/
+extern void qisq2_map_free_elt(qisq2_t *num);
+
+/**
 \brief Find a vector with respect to a database and insert it if it cannot be fo
 und.
 \param dbs The dbs

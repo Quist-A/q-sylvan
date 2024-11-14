@@ -161,10 +161,21 @@ qisq2_map_create(uint64_t size, double tolerance)
     return (void *) qisq2_map;
 }
 
+void 
+qisq2_map_free_elt(qisq2_t *num){
+    mpq_clear(num->a);
+    mpq_clear(num->b);
+    mpq_clear(num->c);
+    mpq_clear(num->d);
+}
+
 void
 qisq2_map_free(void *dbs)
 {
     qisq2_map_t * qisq2_map = (qisq2_map_t *) dbs;
+    for (unsigned int c = 0; c < qisq2_map->size; c++) {
+        qisq2_map_free_elt(&(qisq2_map->table[c].c));
+    }
     free (qisq2_map->table);
     free (qisq2_map);
 }

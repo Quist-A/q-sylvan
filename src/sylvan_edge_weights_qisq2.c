@@ -65,6 +65,7 @@ _weight_qisq2_lookup_ptr(qisq2_t *a, void *wgt_store)
         wgt_table_gc_inc_entries_estimate();
     } else {
         success = true;
+        qisq2_clear(a);
     }
 
     if (!success) {
