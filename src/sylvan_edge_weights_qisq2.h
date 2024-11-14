@@ -49,10 +49,11 @@ static inline qisq2_t qisq2_make(int64_t anum, int64_t aden, int64_t bnum, int64
 static inline EVBDD_WGT
 qisq2_lookup(int64_t anum, int64_t aden, int64_t bnum, int64_t bden, int64_t cnum, int64_t cden, int64_t dnum, int64_t dden)
 {
-	qisq2_t c;
-	c = qisq2_make(anum, aden, bnum, bden, cnum, cden, dnum, dden);
-	//TODO: memory leakage is here, because c is initialized but not cleared
-	return weight_lookup(&c);
+	qisq2_t p;
+	p = qisq2_make(anum, aden, bnum, bden, cnum, cden, dnum, dden);
+	EVBDD_WGT q = weight_lookup(&p);
+	qisq2_clear(&p);
+	return q;
 }
 
 static inline qisq2_t qisq2_zero() { return qisq2_make( 0, 1, 0, 1, 0, 1, 0, 1); }
