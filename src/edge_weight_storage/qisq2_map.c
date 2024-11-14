@@ -58,6 +58,53 @@ print_bucket_bits(bucket_t* b)
 }
 
 
+double 
+qisq2_hash(qisq2_t *num) {
+    return mpq_get_d(num->a);
+}
+/*
+    mpz_t anum, aden, bnum, bden, cnum, cden, dnum, dden;
+    mpz_init(anum); mpz_init(aden); mpz_init(bnum); mpz_init(bden);
+    mpz_init(cnum); mpz_init(cden); mpz_init(dnum); mpz_init(dden);
+    
+    mpz_t temp;
+    mpz_init(temp);
+    uint32_t result;
+
+    //qisq2_reduce(num);
+
+    mpq_get_num(anum, num->a);
+    mpq_get_den(aden, num->a);
+    mpq_get_num(bnum, num->b);
+    mpq_get_den(bden, num->b);
+    mpq_get_num(cnum, num->c);
+    mpq_get_den(cden, num->c);
+    mpq_get_num(dnum, num->d);
+    mpq_get_den(dden, num->d);
+
+    mpz_addmul_ui(temp, anum, 71);
+    mpz_addmul_ui(temp, aden, 173);
+    mpz_addmul_ui(temp, bnum, 281);
+    mpz_addmul_ui(temp, bden, 409);
+    mpz_addmul_ui(temp, cnum, 541);
+    mpz_addmul_ui(temp, cden, 659);
+    mpz_addmul_ui(temp, dnum, 809);
+    mpz_addmul_ui(temp, dden, 941);
+
+    mpz_clear(anum); mpz_clear(aden); 
+    mpz_clear(bnum); mpz_clear(bden); 
+    mpz_clear(cnum); mpz_clear(cden); 
+    mpz_clear(dnum); mpz_clear(dden);
+
+    result = (uint32_t) mpz_get_ui(temp);
+    mpz_clear(temp);
+
+    return result;
+}
+*/
+
+//uint32_t hash_global=0;
+
 int
 qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
 {
@@ -65,8 +112,10 @@ qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
     qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
     bucket_t *val  = (bucket_t *) v;
 
-    // TODO: compute hash based on values (not on pointers)
     uint32_t hash = 0;
+    //uint32_t hash = (uint32_t) qisq2_hash((qisq2_t *)_v);
+    //uint32_t hash = hash_global;
+    //hash_global = hash_global+1;
     //uint32_t hash  = SuperFastHash(&round_v, sizeof(complex_t), 0);
     uint32_t prime = odd_primes[hash & PRIME_MASK];
 
@@ -174,7 +223,9 @@ qisq2_map_free(void *dbs)
 {
     qisq2_map_t * qisq2_map = (qisq2_map_t *) dbs;
     for (unsigned int c = 0; c < qisq2_map->size; c++) {
-        qisq2_map_free_elt(&(qisq2_map->table[c].c));
+        if (qisq2_map->table[c].d[0] != EMPTY){
+            //qisq2_map_free_elt(&(qisq2_map->table[c].c));
+        }
     }
     free (qisq2_map->table);
     free (qisq2_map);

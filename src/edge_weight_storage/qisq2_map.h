@@ -36,6 +36,8 @@ typedef struct {
   mpq_t d;
 } qisq2_t;
 
+extern double qisq2_hash(qisq2_t *num);
+
 /**
 \brief Create a new database.
 \param len The length of the vectors to be stored here
