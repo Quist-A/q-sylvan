@@ -66,7 +66,6 @@ _weight_qisq2_lookup_ptr(qisq2_t *a, void *wgt_store)
         wgt_table_gc_inc_entries_estimate();
     } else {
         success = true;
-        qisq2_clear(a);
     }
 
     if (!success) {
@@ -207,11 +206,11 @@ weight_qisq2_mul(qisq2_t *x, qisq2_t *y)
     mpq_clear(temp);
     mpq_clear(two);
 
-    qisq2_reduce(&result);
+    qisq2_clear(x); // deallocate previous memory of x
+
+    // copy result of multiplication to x
     *x = result;
-
-    qisq2_clear(&result);
-
+    qisq2_reduce(x);
 }
 
 void
@@ -270,29 +269,24 @@ weight_qisq2_div(qisq2_t *x, qisq2_t *y)
 
     weight_qisq2_mul(x, &temp);
     qisq2_clear(&temp);
-    
-    qisq2_reduce(x);
 }
 
 bool
 weight_qisq2_eq(qisq2_t *x, qisq2_t *y)
 {
-    qisq2_reduce(x);
-    qisq2_reduce(y);
-    if (mpq_equal(x->a,y->a) != 0){
+    if (mpq_equal(x->a,y->a) == 0){
         return false;
     }
-    if (mpq_equal(x->b,y->b) != 0){
+    if (mpq_equal(x->b,y->b) == 0){
         return false;
     }
-    if (mpq_equal(x->c,y->c) != 0){
+    if (mpq_equal(x->c,y->c) == 0){
         return false;
     }
-    if (mpq_equal(x->c,y->c) != 0){
+    if (mpq_equal(x->d,y->d) == 0){
         return false;
     }
     return true;
-
 }
 
 bool
@@ -311,8 +305,6 @@ weight_qisq2_eps_close(qisq2_t *x, qisq2_t *y, double eps)
 bool
 weight_qisq2_greater(qisq2_t *x, qisq2_t *y)
 {
-    qisq2_reduce(x);
-    qisq2_reduce(y);
     if (mpq_cmp(x->a,y->a) > 0){
         return false;
     }
