@@ -20,7 +20,7 @@
 #define CACHE_LINE_SIZE 256
 
 // how many "blocks" of 64 bits for a single table entry
-#define entry_size (4*sizeof(uint64_t)/8)
+#define entry_size (4*sizeof(mpq_t)/8)
 
 typedef union {
     qisq2_t         c;
@@ -102,6 +102,31 @@ qisq2_hash(qisq2_t *num) {
     return result;
 }
 
+void qisq2_reduce(qisq2_t *num) {
+    mpq_canonicalize(num->a);
+    mpq_canonicalize(num->b);
+    mpq_canonicalize(num->c);
+    mpq_canonicalize(num->d);
+}
+
+static bool
+qisq2_equal(qisq2_t *in_table, const qisq2_t* to_insert)
+{
+    if (mpq_equal(in_table->a,to_insert->a) == 0){
+        return false;
+    }
+    if (mpq_equal(in_table->b,to_insert->b) == 0){
+        return false;
+    }
+    if (mpq_equal(in_table->c,to_insert->c) == 0){
+        return false;
+    }
+    if (mpq_equal(in_table->d,to_insert->d) == 0){
+        return false;
+    }
+    return true;
+}
+
 int
 qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
 {
@@ -109,9 +134,7 @@ qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
     qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
     bucket_t *val  = (bucket_t *) v;
 
-    //uint32_t hash = 0;
     uint32_t hash = qisq2_hash(v);
-    //uint32_t hash  = SuperFastHash(&v, sizeof(qisq2_t), 0);
     uint32_t prime = odd_primes[hash & PRIME_MASK];
 
     assert (val->d[0] != LOCK);
@@ -141,10 +164,9 @@ qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
             // 3. Bucket not empty, wait for lock
             while (atomic_read(&bucket->d[0]) == LOCK) {}
 
-            // 4. Bucket contains some complex value, check if close to `v`
+            // 4. Bucket contains some complex value, check if equal to `v`
             qisq2_t *in_table = (qisq2_t *)bucket;
-            if (false) {
-                // TODO: decide if values equal
+            if (qisq2_equal(in_table, v)) {
                 *ret = ref;
                 return 1;
             }
@@ -229,5 +251,5 @@ qisq2_map_free(void *dbs)
 double
 qisq2_map_get_tolerance()
 {
-    return 0;
+    return 0.0;
 }
