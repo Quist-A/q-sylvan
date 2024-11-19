@@ -17,6 +17,7 @@ typedef enum edge_weight_type {
     WGT_DOUBLE,
     WGT_COMPLEX_128,
     WGT_RATIONAL_128,
+    WGT_QISQ2,
     n_wgt_types
 } edge_weight_type_t;
 

@@ -57,12 +57,12 @@ print_bucket_bits(bucket_t* b)
     printf("\n");
 }
 
-
-double 
-qisq2_hash(qisq2_t *num) {
-    return mpq_get_d(num->a);
-}
 /*
+Hash the number num
+This function assumes that num is reduced already
+*/
+uint32_t 
+qisq2_hash(qisq2_t *num) {
     mpz_t anum, aden, bnum, bden, cnum, cden, dnum, dden;
     mpz_init(anum); mpz_init(aden); mpz_init(bnum); mpz_init(bden);
     mpz_init(cnum); mpz_init(cden); mpz_init(dnum); mpz_init(dden);
@@ -70,8 +70,6 @@ qisq2_hash(qisq2_t *num) {
     mpz_t temp;
     mpz_init(temp);
     uint32_t result;
-
-    //qisq2_reduce(num);
 
     mpq_get_num(anum, num->a);
     mpq_get_den(aden, num->a);
@@ -96,14 +94,13 @@ qisq2_hash(qisq2_t *num) {
     mpz_clear(cnum); mpz_clear(cden); 
     mpz_clear(dnum); mpz_clear(dden);
 
-    result = (uint32_t) mpz_get_ui(temp);
+    unsigned long int res = mpz_get_ui(temp);
+
+    result = (uint32_t) res;
     mpz_clear(temp);
 
     return result;
 }
-*/
-
-//uint32_t hash_global=0;
 
 int
 qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
@@ -112,11 +109,9 @@ qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
     qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
     bucket_t *val  = (bucket_t *) v;
 
-    uint32_t hash = 0;
-    //uint32_t hash = (uint32_t) qisq2_hash((qisq2_t *)_v);
-    //uint32_t hash = hash_global;
-    //hash_global = hash_global+1;
-    //uint32_t hash  = SuperFastHash(&round_v, sizeof(complex_t), 0);
+    //uint32_t hash = 0;
+    uint32_t hash = qisq2_hash(v);
+    //uint32_t hash  = SuperFastHash(&v, sizeof(qisq2_t), 0);
     uint32_t prime = odd_primes[hash & PRIME_MASK];
 
     assert (val->d[0] != LOCK);

@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <gmp.h>
-#include "flt.h"
 
 /**
 \param Rationals (a,b,c,d) represent the number a + b sqrt(2) + c i + d i sqrt(2)
@@ -36,7 +35,7 @@ typedef struct {
   mpq_t d;
 } qisq2_t;
 
-extern double qisq2_hash(qisq2_t *num);
+extern uint32_t qisq2_hash(qisq2_t *num);
 
 /**
 \brief Create a new database.

@@ -3,6 +3,7 @@
 
 #include "sylvan_edge_weights.h"
 #include "edge_weight_storage/flt.h"
+#include <assert.h>
 
 
 /******************<Implementation of edge_weights interface>******************/
@@ -29,14 +30,16 @@ void weight_qisq2_complexConjugate(qisq2_t *result, qisq2_t *x);
 void weight_qisq2_sqrttwoConjugate(qisq2_t *result, qisq2_t *x);
 
 void weight_qisq2_fprint(FILE *stream, qisq2_t *a);
+void weight_qisq2_print(qisq2_t *a);
 
 void qisq2_init(qisq2_t *num);
 void qisq2_clear(qisq2_t *num);
 void qisq2_reduce(qisq2_t *num);
 
-static inline qisq2_t qisq2_make(int64_t anum, int64_t aden, int64_t bnum, int64_t bden, int64_t cnum, int64_t cden, int64_t dnum, int64_t dden)
+static inline qisq2_t qisq2_make(signed long int anum, unsigned long int aden, signed long int bnum, unsigned long int bden, signed long int cnum, unsigned long int cden, signed long int dnum, unsigned long int dden)
 {
-    qisq2_t res;
+    assert(aden!=0 && bden!=0 && cden!=0 && dden!=0);
+	qisq2_t res;
 	qisq2_init(&res);
 	mpq_set_si(res.a, anum, aden);
     mpq_set_si(res.b, bnum, bden);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sylvan_edge_weights_qisq2.h>
+#include <assert.h>
 
 
 /**********************<Some static utility functions>*************************/
@@ -225,7 +226,6 @@ weight_qisq2_complexConjugate(qisq2_t *result, qisq2_t *x) {
 
 void
 weight_qisq2_sqrttwoConjugate(qisq2_t *result, qisq2_t *x) {
-    
     mpq_set(result->a, x->a);
     mpq_neg(result->b, x->b);
     mpq_set(result->c, x->c);
@@ -237,6 +237,9 @@ weight_qisq2_sqrttwoConjugate(qisq2_t *result, qisq2_t *x) {
 void
 weight_qisq2_div(qisq2_t *x, qisq2_t *y)
 {
+    //check if y is non-zero
+    //assert(!(mpq_sgn(y->a)==0 || mpq_sgn(y->b)==0 || mpq_sgn(y->c)==0 || mpq_sgn(y->d)==0));
+
     qisq2_t temp;
     qisq2_t cc;
     qisq2_t sc;
@@ -274,6 +277,8 @@ weight_qisq2_div(qisq2_t *x, qisq2_t *y)
 bool
 weight_qisq2_eq(qisq2_t *x, qisq2_t *y)
 {
+    qisq2_reduce(x);
+    qisq2_reduce(y);
     if (mpq_equal(x->a,y->a) != 0){
         return false;
     }
@@ -306,6 +311,8 @@ weight_qisq2_eps_close(qisq2_t *x, qisq2_t *y, double eps)
 bool
 weight_qisq2_greater(qisq2_t *x, qisq2_t *y)
 {
+    qisq2_reduce(x);
+    qisq2_reduce(y);
     if (mpq_cmp(x->a,y->a) > 0){
         return false;
     }
@@ -326,6 +333,14 @@ weight_qisq2_fprint(FILE *stream, qisq2_t *x)
 {
     fprintf(stream, "\t%f + %f sqrt(2) + %f i + %f i sqrt(2)\n",
                mpq_get_d(x->a), mpq_get_d(x->b), mpq_get_d(x->c), mpq_get_d(x->d));
+}
+
+void
+weight_qisq2_print(qisq2_t *x)
+{
+    printf("\t%f + %f sqrt(2) + %f i + %f i sqrt(2)\n",
+               mpq_get_d(x->a), mpq_get_d(x->b), mpq_get_d(x->c), mpq_get_d(x->d));
+    gmp_printf("\t%#4Qx + \n\t%#4Qx sqrt(2) +\n\t%#4Qx i +\n\t%#4Qx i sqrt(2)\n\n", x->a, x->b, x->c, x->d);
 }
 
 /*****************</Implementation of edge_weights interface>******************/
