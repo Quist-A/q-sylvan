@@ -469,7 +469,6 @@ sylvan_init_evbdd(size_t min_wgt_tablesize, size_t max_wgt_tablesize,
         evbdd_protected_created = 1;
     }
 
-    // TODO: pass edge weight type to sylvan_init_evbdd
     if (min_wgt_tablesize > max_wgt_tablesize) min_wgt_tablesize = max_wgt_tablesize;
     if (edge_weigth_backend==QISQ2_MAP){
         sylvan_init_edge_weights(min_wgt_tablesize, max_wgt_tablesize, 

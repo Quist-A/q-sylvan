@@ -117,7 +117,7 @@ qsylvan_init_simulator(size_t min_tablesize, size_t max_tablesize, double wgt_ta
 void
 qsylvan_init_defaults(size_t wgt_tab_size)
 {
-    qsylvan_init_simulator(wgt_tab_size, wgt_tab_size, -1, COMP_HASHMAP, NORM_LOW);
+    qsylvan_init_simulator(wgt_tab_size, wgt_tab_size, -1, QISQ2_MAP, NORM_LOW);
 }
 
 /*****************************</Initialization>********************************/
