@@ -17,10 +17,12 @@
 
 #include <qsylvan_simulator.h>
 #include <inttypes.h>
+#include <sylvan_edge_weights_qisq2.h>
 
 static bool testing_mode = 0; // turns on/off (expensive) sanity checks
 static int granularity = 1; // operation cache access granularity
 
+const double SQRT2 = 1.41421356237309504880;
 
 /***************<Helper functions for chaching QMDD operations>****************/
 
@@ -60,6 +62,21 @@ GATE_OPID_64(uint32_t gateid, BDDVAR a, BDDVAR b, BDDVAR c, BDDVAR d, BDDVAR e)
 
 /******************************<Initialization>********************************/
 
+qmdd_get_amplitude_f qmdd_get_amplitude;
+qmdd_amp_to_prob_f qmdd_amp_to_prob;
+qmdd_amp_from_prob_f qmdd_amp_from_prob;
+qmdd_fid_from_amp_f qmdd_fid_from_amp;
+
+complex_t qmdd_get_amplitude_complex(QMDD q, bool *x, BDDVAR nqubits);
+double qmdd_amp_to_prob_complex(AMP a);
+AMP qmdd_amp_from_prob_complex(double a);
+double qmdd_fid_from_amp_complex(AMP prod);
+
+complex_t qmdd_get_amplitude_qisq2(QMDD q, bool *x, BDDVAR nqubits);
+double qmdd_amp_to_prob_qisq2(AMP a);
+AMP qmdd_amp_from_prob_qisq2(double a);
+double qmdd_fid_from_amp_qisq2(AMP prod);
+
 void
 qsylvan_init_simulator(size_t min_tablesize, size_t max_tablesize, double wgt_tab_tolerance, int edge_weigth_backend, int norm_strat)
 {
@@ -74,6 +91,24 @@ qsylvan_init_simulator(size_t min_tablesize, size_t max_tablesize, double wgt_ta
             exit(0);
         }
         sylvan_init_evbdd(min_tablesize, max_tablesize, wgt_tab_tolerance, edge_weigth_backend, norm_strat, &qmdd_gates_qisq2_init);
+        break;
+    }
+    
+    switch (edge_weigth_backend)
+    {
+    case COMP_HASHMAP:
+        //qmdd_fidelity       = (qmdd_fidelity_f) &qmdd_fidelity_complex;
+        qmdd_fid_from_amp   = (qmdd_fid_from_amp_f) &qmdd_fid_from_amp_complex;
+        qmdd_get_amplitude  = (qmdd_get_amplitude_f) &qmdd_get_amplitude_complex;
+        qmdd_amp_to_prob    = (qmdd_amp_to_prob_f) &qmdd_amp_to_prob_complex;
+        qmdd_amp_from_prob  = (qmdd_amp_from_prob_f) &qmdd_amp_from_prob_complex;   
+        break;
+    case QISQ2_MAP:
+        //qmdd_fidelity       = (qmdd_fidelity_f) &qmdd_fidelity_qisq2;
+        qmdd_fid_from_amp   = (qmdd_fid_from_amp_f) &qmdd_fid_from_amp_qisq2;
+        qmdd_get_amplitude  = (qmdd_get_amplitude_f) &qmdd_get_amplitude_qisq2;
+        qmdd_amp_to_prob    = (qmdd_amp_to_prob_f) &qmdd_amp_to_prob_qisq2;
+        qmdd_amp_from_prob  = (qmdd_amp_from_prob_f) &qmdd_amp_from_prob_qisq2;
         break;
     }
     
@@ -1009,7 +1044,7 @@ TASK_IMPL_3(double, qmdd_unnormed_prob, QMDD, qmdd, BDDVAR, topvar, BDDVAR, nvar
 }
 
 complex_t
-qmdd_get_amplitude(QMDD q, bool *x, BDDVAR nqubits)
+qmdd_get_amplitude_complex(QMDD q, bool *x, BDDVAR nqubits)
 {
     // QMDD is indexed q_0, ..., q_{n-1} but |x> is assumed q_{n-1}, ..., q_0,
     // so we temporarily reverse x.
@@ -1021,7 +1056,7 @@ qmdd_get_amplitude(QMDD q, bool *x, BDDVAR nqubits)
 }
 
 double
-qmdd_amp_to_prob(AMP a)
+qmdd_amp_to_prob_complex(AMP a)
 {
     complex_t c;
     weight_value(a, &c);
@@ -1030,7 +1065,7 @@ qmdd_amp_to_prob(AMP a)
 }
 
 AMP
-qmdd_amp_from_prob(double a)
+qmdd_amp_from_prob_complex(double a)
 {
     complex_t c;
     c.r = flt_sqrt(a);
@@ -1038,15 +1073,70 @@ qmdd_amp_from_prob(double a)
     return weight_lookup(&c);
 }
 
-double qmdd_fidelity(QMDD a, QMDD b, BDDVAR nvars)
-{
-    // c = <a|b>
-    AMP prod = evbdd_inner_product(a, b, nvars);
+double
+qmdd_fid_from_amp_complex(AMP prod){
     complex_t c;
     weight_value(prod, &c);
 
     // fid = |c|^2 = |c.r + c.i|^2 = sqrt(c.r^2 + c.i^2)^2 = c.r^2 + c.i^2
     double fid = c.r*c.r + c.i*c.i;
+    return fid;
+}
+
+double qmdd_fidelity(QMDD a, QMDD b, BDDVAR nvars)
+{
+    // c = <a|b>
+    AMP prod = evbdd_inner_product(a, b, nvars);
+    return qmdd_fid_from_amp(prod);
+}
+
+complex_t
+qmdd_get_amplitude_qisq2(QMDD q, bool *x, BDDVAR nqubits)
+{
+    // QMDD is indexed q_0, ..., q_{n-1} but |x> is assumed q_{n-1}, ..., q_0,
+    // so we temporarily reverse x.
+    reverse_bit_array(x, nqubits);
+    qisq2_t res;
+    complex_t res_complex;
+    qisq2_init(&res);
+    weight_value(evbdd_getvalue(q, x), &res);
+    reverse_bit_array(x, nqubits);
+    res_complex.r = mpq_get_d(res.a) + mpq_get_d(res.b)*SQRT2;
+    res_complex.i = mpq_get_d(res.c) + mpq_get_d(res.d)*SQRT2;
+    qisq2_clear(&res);
+    return res_complex;
+}
+
+double
+qmdd_amp_to_prob_qisq2(AMP a)
+{
+    qisq2_t c;
+    qisq2_init(&c);
+    weight_value(a, &c);
+    weight_abs(&c); // calculates |c|^2
+    double abs = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
+    qisq2_clear(&c);
+    return (abs);
+}
+
+AMP
+qmdd_amp_from_prob_qisq2(double a)
+{
+    qisq2_t c;
+    qisq2_init(&c);
+    mpq_set_d(c.a,flt_sqrt(a));
+    return weight_lookup(&c);
+}
+
+double
+qmdd_fid_from_amp_qisq2(AMP prod){
+    qisq2_t c;
+    weight_value(prod, &c);
+
+    // fid = |c|^2 = |c.r + c.i|^2 = sqrt(c.r^2 + c.i^2)^2 = c.r^2 + c.i^2
+    weight_abs(&c); // calculates |c|^2
+    double fid = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
+    qisq2_clear(&c);
     return fid;
 }
 
