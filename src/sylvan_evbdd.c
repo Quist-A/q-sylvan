@@ -1098,7 +1098,7 @@ static void
 evbdd_fprintdot_edge_label(FILE *out, EVBDD_WGT w)
 {
     fprintf(out, ", label=\"");
-    if (w == EVBDD_ONE) {}
+    if (w == EVBDD_ONE) { fprintf(out, "1"); }
     else if (w == EVBDD_ZERO) { fprintf(out, "0"); }
     else if (w == EVBDD_MIN_ONE) { fprintf(out, "-1"); }
     else { wgt_fprint(out, w); }
