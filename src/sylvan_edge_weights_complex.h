@@ -15,6 +15,7 @@ EVBDD_WGT _weight_complex_lookup_ptr(complex_t *a, void *wgt_store);
 void init_complex_one_zero(void *wgt_store);
 
 void weight_complex_abs(complex_t *a);
+void weight_complex_abs_sqr(complex_t *a);
 void weight_complex_neg(complex_t *a);
 void weight_complex_conj(complex_t *a);
 void weight_complex_sqr(complex_t *a);

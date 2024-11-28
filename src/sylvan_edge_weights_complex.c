@@ -89,6 +89,13 @@ weight_complex_abs(complex_t *a)
 }
 
 void
+weight_complex_abs_sqr(complex_t *a)
+{
+    a->r = (a->r*a->r) + (a->i*a->i);
+    a->i = 0.0;
+}
+
+void
 weight_complex_neg(complex_t *a)
 {
     a->r = -(a->r);

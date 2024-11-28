@@ -16,6 +16,7 @@ EVBDD_WGT _weight_qisq2_lookup_ptr(qisq2_t *a, void *wgt_store);
 void init_qisq2_one_zero(void *wgt_store);
 
 void weight_qisq2_abs(qisq2_t *a);
+void weight_qisq2_abs_sqr(qisq2_t *a);
 void weight_qisq2_neg(qisq2_t *a);
 void weight_qisq2_conj(qisq2_t *a);
 void weight_qisq2_sqr(qisq2_t *a);

@@ -93,6 +93,16 @@ init_qisq2_one_zero(void *wgt_store)
 }
 
 void
+weight_qisq2_abs_sqr(qisq2_t *a)
+{
+    qisq2_t temp;
+    qisq2_init(&temp);
+    weight_qisq2_complexConjugate(&temp,a);
+    weight_qisq2_mul(a,&temp);
+    qisq2_clear(&temp);
+}
+
+void
 weight_qisq2_abs(qisq2_t *a)
 {
     qisq2_t temp;
@@ -100,6 +110,20 @@ weight_qisq2_abs(qisq2_t *a)
     weight_qisq2_complexConjugate(&temp,a);
     weight_qisq2_mul(a,&temp);
     qisq2_clear(&temp);
+    if (mpq_get_d(a->b)==0.0){
+        mpq_set_d(a->a,sqrt(mpq_get_d(a->a)));
+    } 
+    else if (mpq_get_d(a->a)==0.0){
+        mpq_set_d(a->b,sqrt(mpq_get_d(a->b)));
+    }
+    else{
+        //TODO: implement abs for general case
+        printf("NotImplementedError \n");
+        printf("absolute value of \n");
+        weight_qisq2_print(a);
+        printf("cannot be calculated in qisq2\n");
+        exit(0);
+    }
 }
 
 void
@@ -129,21 +153,29 @@ weight_qisq2_sqr(qisq2_t *a)
 void
 weight_qisq2_add(qisq2_t *x, qisq2_t *y)
 {
-    mpq_add(x->a, x->a, y->a);
-    mpq_add(x->b, x->b, y->b);
-    mpq_add(x->c, x->c, y->c);
-    mpq_add(x->d, x->d, y->d);
-    qisq2_reduce(x);
+    qisq2_t result;
+    qisq2_init(&result);
+    mpq_add(result.a, x->a, y->a);
+    mpq_add(result.b, x->b, y->b);
+    mpq_add(result.c, x->c, y->c);
+    mpq_add(result.d, x->d, y->d);
+    qisq2_reduce(&result);
+
+    *x = result;
 }
 
 void
 weight_qisq2_sub(qisq2_t *x, qisq2_t *y)
 {
-    mpq_sub(x->a, x->a, y->a);
-    mpq_sub(x->b, x->b, y->b);
-    mpq_sub(x->c, x->c, y->c);
-    mpq_sub(x->d, x->d, y->d);
-    qisq2_reduce(x);
+    qisq2_t result;
+    qisq2_init(&result);
+    mpq_sub(result.a, x->a, y->a);
+    mpq_sub(result.b, x->b, y->b);
+    mpq_sub(result.c, x->c, y->c);
+    mpq_sub(result.d, x->d, y->d);
+    qisq2_reduce(&result);
+
+    *x = result;
 }
 
 void
@@ -207,7 +239,7 @@ weight_qisq2_mul(qisq2_t *x, qisq2_t *y)
     mpq_clear(temp);
     mpq_clear(two);
 
-    qisq2_clear(x); // deallocate previous memory of x
+    //qisq2_clear(x); // deallocate previous memory of x
 
     // copy result of multiplication to x
     *x = result;

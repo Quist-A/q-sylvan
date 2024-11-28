@@ -35,6 +35,7 @@ weight_lookup_f 		weight_lookup;
 _weight_lookup_ptr_f	_weight_lookup_ptr;
 init_one_zero_f 		init_one_zero;
 weight_abs_f 			weight_abs;
+weight_abs_sqr_f        weight_abs_sqr;
 weight_neg_f 			weight_neg;
 weight_conj_f           weight_conj;
 weight_sqr_f 			weight_sqr;
@@ -82,6 +83,7 @@ void init_edge_weight_functions(edge_weight_type_t edge_weight_type)
         _weight_lookup_ptr  = (_weight_lookup_ptr_f) &_weight_complex_lookup_ptr;
         init_one_zero       = (init_one_zero_f) &init_complex_one_zero;
         weight_abs          = (weight_abs_f) &weight_complex_abs;
+        weight_abs_sqr      = (weight_abs_sqr_f) &weight_complex_abs_sqr;
         weight_neg          = (weight_neg_f) &weight_complex_neg;
         weight_conj         = (weight_conj_f) &weight_complex_conj;
         weight_sqr          = (weight_sqr_f) &weight_complex_sqr;
@@ -103,6 +105,7 @@ void init_edge_weight_functions(edge_weight_type_t edge_weight_type)
         _weight_lookup_ptr  = (_weight_lookup_ptr_f) &_weight_qisq2_lookup_ptr;
         init_one_zero       = (init_one_zero_f) &init_qisq2_one_zero;
         weight_abs          = (weight_abs_f) &weight_qisq2_abs;
+        weight_abs_sqr      = (weight_abs_sqr_f) &weight_qisq2_abs_sqr;
         weight_neg          = (weight_neg_f) &weight_qisq2_neg;
         weight_conj         = (weight_conj_f) &weight_qisq2_conj;
         weight_sqr          = (weight_sqr_f) &weight_qisq2_sqr;
@@ -391,6 +394,24 @@ wgt_abs(EVBDD_WGT a)
     weight_t w = weight_malloc();
     weight_value(a, w);
     weight_abs(w);
+    res = weight_lookup_ptr(w);
+    free(w);
+
+    return res;
+}
+
+EVBDD_WGT
+wgt_abs_sqr(EVBDD_WGT a)
+{
+    // special cases
+    if (a == EVBDD_ZERO || a == EVBDD_ONE) return a;
+    if (a == EVBDD_MIN_ONE) return EVBDD_ONE;
+
+    EVBDD_WGT res;
+
+    weight_t w = weight_malloc();
+    weight_value(a, w);
+    weight_abs_sqr(w);
     res = weight_lookup_ptr(w);
     free(w);
 

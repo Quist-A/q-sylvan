@@ -215,14 +215,20 @@ int test_complex_operations_qisq2() // No influence on DD
     test_assert(index3 == index4);  test_assert(weight_eq(&val3, &val4));
 
     // wgt_abs
+    ref1 = qisq2_make(-1,2,0,1,0,1,0,1);        index1 = weight_lookup(&ref1);  weight_value(index1, &val1);
+    ref2 = qisq2_make(1,2,0,1,0,1,0,1);        index2 = weight_lookup(&ref2);  weight_value(index2, &val2);
+    index3=wgt_abs(index1);         weight_value(index3, &val3);
+    test_assert(index2 == index3);  test_assert(weight_eq(&val2,&val3));
+
+    // wgt_abs_sqr
     ref1 = qisq2_make(1,3,0,1,0,1,0,1);        index1 = weight_lookup(&ref1);  weight_value(index1, &val1);
     ref2 = qisq2_make(1,9,0,1,0,1,0,1);        index2 = weight_lookup(&ref2);  weight_value(index2, &val2);
-    index3=wgt_abs(index1);         weight_value(index3, &val3);
+    index3=wgt_abs_sqr(index1);         weight_value(index3, &val3);
     test_assert(index2 == index3);  test_assert(weight_eq(&val2,&val3));
 
     ref1 = qisq2_make(1,3,0,1,1,1, 3,2);        index1 = weight_lookup(&ref1);  weight_value(index1, &val1);
     ref2 = qisq2_make(101,18,3,1,0,1,0,2);        index2 = weight_lookup(&ref2);  weight_value(index2, &val2);
-    index3=wgt_abs(index1);         weight_value(index3, &val3);
+    index3=wgt_abs_sqr(index1);         weight_value(index3, &val3);
     test_assert(index2 == index3);  test_assert(weight_eq(&val2,&val3));
 
     if(VERBOSE) printf("complex operations:             ok\n");

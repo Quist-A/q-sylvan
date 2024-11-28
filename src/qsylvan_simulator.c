@@ -1113,7 +1113,7 @@ qmdd_amp_to_prob_qisq2(AMP a)
     qisq2_t c;
     qisq2_init(&c);
     weight_value(a, &c);
-    weight_abs(&c); // calculates |c|^2
+    weight_qisq2_abs_sqr(&c);
     double abs = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
     qisq2_clear(&c);
     return (abs);
@@ -1134,7 +1134,7 @@ qmdd_fid_from_amp_qisq2(AMP prod){
     weight_value(prod, &c);
 
     // fid = |c|^2 = |c.r + c.i|^2 = sqrt(c.r^2 + c.i^2)^2 = c.r^2 + c.i^2
-    weight_abs(&c); // calculates |c|^2
+    weight_qisq2_abs_sqr(&c);
     double fid = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
     qisq2_clear(&c);
     return fid;

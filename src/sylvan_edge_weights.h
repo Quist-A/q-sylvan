@@ -71,6 +71,7 @@ typedef void (*init_one_zero_f)(void *wgt_store);
 
 /* Arithmetic operations on edge weights */
 typedef void (*weight_abs_f)(weight_t a); // a <-- |a|
+typedef void (*weight_abs_sqr_f)(weight_t a); // a <-- |a|^2
 typedef void (*weight_neg_f)(weight_t a); // a <-- -a
 typedef void (*weight_conj_f)(weight_t a); // a <-- a*
 typedef void (*weight_sqr_f)(weight_t a); // a <-- a^2
@@ -97,6 +98,7 @@ extern weight_lookup_f 		weight_lookup;
 extern _weight_lookup_ptr_f	_weight_lookup_ptr;
 extern init_one_zero_f 		init_one_zero;
 extern weight_abs_f 		weight_abs;
+extern weight_abs_sqr_f 	weight_abs_sqr;
 extern weight_neg_f 		weight_neg;
 extern weight_conj_f        weight_conj;
 extern weight_sqr_f 		weight_sqr;
@@ -138,6 +140,7 @@ void wgt_set_inverse_chaching(bool on);
 
 /* Arithmetic operations on EVBDD_WGT's */
 EVBDD_WGT wgt_abs(EVBDD_WGT a); // returns |a|
+EVBDD_WGT wgt_abs_sqr(EVBDD_WGT a); // returns |a|^2
 EVBDD_WGT wgt_neg(EVBDD_WGT a); // returns -a
 EVBDD_WGT wgt_conj(EVBDD_WGT a); // returns a*
 EVBDD_WGT wgt_add(EVBDD_WGT a, EVBDD_WGT b); // returns a + b
