@@ -241,7 +241,16 @@ qisq2_map_free(void *dbs)
     qisq2_map_t * qisq2_map = (qisq2_map_t *) dbs;
     for (unsigned int c = 0; c < qisq2_map->size; c++) {
         if (qisq2_map->table[c].d[0] != EMPTY){
-            //qisq2_map_free_elt(&(qisq2_map->table[c].c));
+            /*
+            // sanity check for debugging
+            if (c!=qisq2_hash(&(qisq2_map->table[c].c))){
+                printf("ERROR: hash table failure \n");
+                printf("Hash value of entry is: %d \n", c);
+                printf("Hash value of entry should be: %d \n", qisq2_hash(&(qisq2_map->table[c].c)));
+                exit(0);
+            }
+            */
+            qisq2_map_free_elt(&(qisq2_map->table[c].c));
         }
     }
     free (qisq2_map->table);
