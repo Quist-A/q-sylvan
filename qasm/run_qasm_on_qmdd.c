@@ -36,7 +36,7 @@ static size_t min_wgt_tab_size = 1LL<<23;
 static size_t max_wgt_tab_size = 1LL<<23;
 static double tolerance = 1e-14;
 static int wgt_table_type = COMP_HASHMAP;
-static int wgt_norm_strat = NORM_MAX;
+static int wgt_norm_strat = NORM_LOW;
 static bool wgt_inv_caching = true;
 static int reorder_qubits = 0;
 static char* qasm_inputfile = NULL;
@@ -48,6 +48,7 @@ static struct argp_option options[] =
     {"workers", 'w', "<workers>", 0, "Number of workers/threads (default=1)", 0},
     {"rseed", 'r', "<random-seed>", 0, "Set random seed", 0},
     {"norm-strat", 's', "<low|max|min|l2>", 0, "Edge weight normalization strategy", 0},
+    {"edge-weight-type", 'e', "<float|qisq2>", 0, "Edge weight type (default float)", 0},
     {"tol", 't', "<tolerance>", 0, "Tolerance for deciding edge weights equal (default=1e-14)", 0},
     {"json", 'j', "<filename>", 0, "Write stats to given filename as json", 0},
     {"count-nodes", 'c', 0, 0, "Track maximum number of nodes", 0},
@@ -75,6 +76,11 @@ parse_opt(int key, char *arg, struct argp_state *state)
         else if (strcmp(arg, "max")==0) wgt_norm_strat = NORM_MAX;
         else if (strcmp(arg, "min")==0) wgt_norm_strat = NORM_MIN;
         else if (strcasecmp(arg, "l2")==0) wgt_norm_strat = NORM_L2;
+        else argp_usage(state);
+        break;
+    case 'e':
+        if (strcmp(arg, "float")==0) wgt_table_type = COMP_HASHMAP;
+        else if (strcasecmp(arg, "qisq2")==0) wgt_table_type = QISQ2_MAP;
         else argp_usage(state);
         break;
     case 't':
@@ -175,6 +181,7 @@ void fprint_stats(FILE *stream, quantum_circuit_t* circuit)
     fprintf(stream, "    \"tolerance\": %.5e,\n", tolerance);
     fprintf(stream, "    \"wgt_inv_caching\": %d,\n", wgt_inv_caching);
     fprintf(stream, "    \"wgt_norm_strat\": %d,\n", wgt_norm_strat);
+    fprintf(stream, "    \"wgt_type\": %d,\n", wgt_table_type);
     fprintf(stream, "    \"min_node_tab_size\": %" PRId64 ",\n", min_tablesize);
     fprintf(stream, "    \"max_node_tab_size\": %" PRId64 ",\n", max_tablesize);
     fprintf(stream, "    \"min_wgt_tab_size\": %" PRId64 ",\n", min_wgt_tab_size);
@@ -416,7 +423,7 @@ int main(int argc, char *argv[])
     // Simple Sylvan initialization
     sylvan_set_sizes(min_tablesize, max_tablesize, min_cachesize, max_cachesize);
     sylvan_init_package();
-    qsylvan_init_simulator(min_wgt_tab_size, max_wgt_tab_size, tolerance, COMP_HASHMAP, wgt_norm_strat);
+    qsylvan_init_simulator(min_wgt_tab_size, max_wgt_tab_size, tolerance, wgt_table_type, wgt_norm_strat);
     wgt_set_inverse_chaching(wgt_inv_caching);
 
     simulate_circuit(circuit);

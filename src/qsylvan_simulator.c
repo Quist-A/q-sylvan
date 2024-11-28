@@ -87,7 +87,12 @@ qsylvan_init_simulator(size_t min_tablesize, size_t max_tablesize, double wgt_ta
         break;
     case QISQ2_MAP:
         if (norm_strat == NORM_L2){
-            printf("Invalid L2 norm for Qisq2 numbers!");
+            printf("Invalid L2 norm for Qisq2 edge weights!\nAborted \n");
+            exit(0);
+        }
+        if (norm_strat == NORM_MAX){
+            //TODO: implement max_norm for qisq2
+            printf("Qisq2 edge weights are not implemented with max weights.\nAborted \n");
             exit(0);
         }
         sylvan_init_evbdd(min_tablesize, max_tablesize, wgt_tab_tolerance, edge_weigth_backend, norm_strat, &qmdd_gates_qisq2_init);
