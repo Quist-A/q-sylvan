@@ -56,7 +56,7 @@ qisq2_lookup(signed long int anum, unsigned long int aden, signed long int bnum,
 	qisq2_t p;
 	p = qisq2_make(anum, aden, bnum, bden, cnum, cden, dnum, dden);
 	EVBDD_WGT q = weight_lookup(&p);
-	qisq2_clear(&p);
+	//qisq2_clear(&p);
 	return q;
 }
 

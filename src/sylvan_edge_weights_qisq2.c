@@ -22,11 +22,11 @@ void qisq2_init(qisq2_t *num) {
 }
 
 void qisq2_clear(qisq2_t *num) {
-    //mpq_clear(num->a);
-    //mpq_clear(num->b);
-    //mpq_clear(num->c);
-    //mpq_clear(num->d);
-    qisq2_reduce(num);
+    mpq_clear(num->a);
+    mpq_clear(num->b);
+    mpq_clear(num->c);
+    mpq_clear(num->d);
+    //qisq2_reduce(num);
 }
 
 void qisq2_reduce(qisq2_t *num) {

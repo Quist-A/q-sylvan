@@ -12,6 +12,7 @@
 #include "atomics.h"
 #include "fast_hash.h"
 #include "util.h"
+#include "../sylvan_edge_weights_qisq2.h"
 
 #undef CACHE_LINE
 #undef CACHE_LINE_SIZE
@@ -80,14 +81,14 @@ qisq2_hash(qisq2_t *num) {
     mpq_get_num(dnum, num->d);
     mpq_get_den(dden, num->d);
 
-    mpz_addmul_ui(temp, anum, 71);
-    mpz_addmul_ui(temp, aden, 173);
-    mpz_addmul_ui(temp, bnum, 281);
-    mpz_addmul_ui(temp, bden, 409);
-    mpz_addmul_ui(temp, cnum, 541);
-    mpz_addmul_ui(temp, cden, 659);
-    mpz_addmul_ui(temp, dnum, 809);
-    mpz_addmul_ui(temp, dden, 941);
+    mpz_addmul_ui(temp, anum, 341543674);
+    mpz_addmul_ui(temp, aden, 17);
+    mpz_addmul_ui(temp, bnum, 80995773);
+    mpz_addmul_ui(temp, bden, 9);
+    mpz_addmul_ui(temp, cnum, 7316147);
+    mpz_addmul_ui(temp, cden, 71);
+    mpz_addmul_ui(temp, dnum, 2817);
+    mpz_addmul_ui(temp, dden, 7);
 
     mpz_clear(anum); mpz_clear(aden); 
     mpz_clear(bnum); mpz_clear(bden); 
@@ -127,6 +128,16 @@ qisq2_equal(qisq2_t *in_table, const qisq2_t* to_insert)
     return true;
 }
 
+
+void qisq2_clear(qisq2_t *num) {
+    mpq_clear(num->a);
+    mpq_clear(num->b);
+    mpq_clear(num->c);
+    mpq_clear(num->d);
+    //qisq2_reduce(num);
+}
+
+
 int
 qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
 {
@@ -134,6 +145,7 @@ qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
     qisq2_map_t *qisq2_map = (qisq2_map_t *) dbs;
     bucket_t *val  = (bucket_t *) v;
 
+    qisq2_reduce(v);
     uint32_t hash = qisq2_hash(v);
     uint32_t prime = odd_primes[hash & PRIME_MASK];
 
@@ -168,6 +180,7 @@ qisq2_map_find_or_put(const void *dbs, const void *_v, uint64_t *ret)
             qisq2_t *in_table = (qisq2_t *)bucket;
             if (qisq2_equal(in_table, v)) {
                 *ret = ref;
+                qisq2_clear(v);
                 return 1;
             }
 
@@ -229,10 +242,15 @@ qisq2_map_create(uint64_t size, double tolerance)
 
 void 
 qisq2_map_free_elt(qisq2_t *num){
-    mpq_clear(num->a);
-    mpq_clear(num->b);
-    mpq_clear(num->c);
-    mpq_clear(num->d);
+    qisq2_clear(num);
+}
+
+void
+qisq2_print(qisq2_t *x)
+{
+    printf("\t%f + %f sqrt(2) + %f i + %f i sqrt(2)\n",
+               mpq_get_d(x->a), mpq_get_d(x->b), mpq_get_d(x->c), mpq_get_d(x->d));
+    gmp_printf("\t%#4Qx + \n\t%#4Qx sqrt(2) +\n\t%#4Qx i +\n\t%#4Qx i sqrt(2)\n\n", x->a, x->b, x->c, x->d);
 }
 
 void
@@ -243,11 +261,12 @@ qisq2_map_free(void *dbs)
         if (qisq2_map->table[c].d[0] != EMPTY){
             /*
             // sanity check for debugging
-            if (c!=qisq2_hash(&(qisq2_map->table[c].c))){
+            if (c!=(qisq2_hash(&(qisq2_map->table[c].c))& qisq2_map->mask)){
                 printf("ERROR: hash table failure \n");
-                printf("Hash value of entry is: %d \n", c);
-                printf("Hash value of entry should be: %d \n", qisq2_hash(&(qisq2_map->table[c].c)));
-                exit(0);
+                printf("Hash value of entry is: %u \n", c);
+                printf("Hash value of entry should be: %ld \n", qisq2_hash(&(qisq2_map->table[c].c))& qisq2_map->mask);
+                qisq2_print(&(qisq2_map->table[c].c));
+                //exit(0);
             }
             */
             qisq2_map_free_elt(&(qisq2_map->table[c].c));
