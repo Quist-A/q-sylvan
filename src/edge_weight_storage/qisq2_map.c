@@ -81,11 +81,11 @@ qisq2_hash(qisq2_t *num) {
     mpq_get_num(dnum, num->d);
     mpq_get_den(dden, num->d);
 
-    mpz_addmul_ui(temp, anum, 341543674);
+    mpz_addmul_ui(temp, anum, 3443);
     mpz_addmul_ui(temp, aden, 17);
-    mpz_addmul_ui(temp, bnum, 80995773);
+    mpz_addmul_ui(temp, bnum, 8093);
     mpz_addmul_ui(temp, bden, 9);
-    mpz_addmul_ui(temp, cnum, 7316147);
+    mpz_addmul_ui(temp, cnum, 7314);
     mpz_addmul_ui(temp, cden, 71);
     mpz_addmul_ui(temp, dnum, 2817);
     mpz_addmul_ui(temp, dden, 7);
