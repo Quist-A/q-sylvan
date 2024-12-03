@@ -1101,26 +1101,30 @@ qmdd_get_amplitude_qisq2(QMDD q, bool *x, BDDVAR nqubits)
     // QMDD is indexed q_0, ..., q_{n-1} but |x> is assumed q_{n-1}, ..., q_0,
     // so we temporarily reverse x.
     reverse_bit_array(x, nqubits);
-    qisq2_t res;
+    qisq2_t *res;
+    res = weight_qisq2_malloc();
     complex_t res_complex;
-    qisq2_init(&res);
-    weight_value(evbdd_getvalue(q, x), &res);
+    qisq2_init(res);
+    weight_value(evbdd_getvalue(q, x), res);
     reverse_bit_array(x, nqubits);
-    res_complex.r = mpq_get_d(res.a) + mpq_get_d(res.b)*SQRT2;
-    res_complex.i = mpq_get_d(res.c) + mpq_get_d(res.d)*SQRT2;
-    qisq2_clear(&res);
+    res_complex.r = mpq_get_d(res->a) + mpq_get_d(res->b)*SQRT2;
+    res_complex.i = mpq_get_d(res->c) + mpq_get_d(res->d)*SQRT2;
+    free(res);
+    //qisq2_clear(&res);
     return res_complex;
 }
 
 double
 qmdd_amp_to_prob_qisq2(AMP a)
 {
-    qisq2_t c;
-    qisq2_init(&c);
-    weight_value(a, &c);
-    weight_qisq2_abs_sqr(&c);
-    double abs = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
-    qisq2_clear(&c);
+    qisq2_t *c;
+    c = weight_qisq2_malloc();
+    //qisq2_init(&c);
+    weight_value(a, c);
+    weight_qisq2_abs_sqr(c);
+    double abs = mpq_get_d(c->a) + mpq_get_d(c->b)*SQRT2;
+    free(c);
+    //qisq2_clear(&c);
     return (abs);
 }
 
@@ -1141,7 +1145,7 @@ qmdd_fid_from_amp_qisq2(AMP prod){
     // fid = |c|^2 = |c.r + c.i|^2 = sqrt(c.r^2 + c.i^2)^2 = c.r^2 + c.i^2
     weight_qisq2_abs_sqr(&c);
     double fid = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
-    qisq2_clear(&c);
+    //qisq2_clear(&c);
     return fid;
 }
 
