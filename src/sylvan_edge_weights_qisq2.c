@@ -46,9 +46,9 @@ weight_qisq2_malloc()
 void
 _weight_qisq2_value(void *wgt_store, EVBDD_WGT a, qisq2_t *res)
 {
-    if (a == EVBDD_ZERO)         *res = qisq2_zero();
-    else if (a == EVBDD_ONE)     *res = qisq2_one();
-    else if (a == EVBDD_MIN_ONE) *res = qisq2_mone();
+    //if (a == EVBDD_ZERO)         *res = qisq2_zero();
+    //else if (a == EVBDD_ONE)     *res = qisq2_one();
+    //else if (a == EVBDD_MIN_ONE) *res = qisq2_mone();
     *res = *(qisq2_t*)(wgt_store_get(wgt_store, a)); // ?
 }
 
@@ -267,41 +267,67 @@ weight_qisq2_sqrttwoConjugate(qisq2_t *result, qisq2_t *x) {
 }
 
 void
+qisq2_mul_clear_input(qisq2_t *x, qisq2_t *y) {
+    qisq2_t *tmp;
+    tmp = weight_qisq2_malloc();
+    *tmp = *x;
+    weight_qisq2_mul(x,y);
+    qisq2_clear(tmp);
+    free(tmp);
+}
+
+void
+weight_qisq2_set(qisq2_t *x, qisq2_t *y){
+    mpq_set(x->a,y->a);
+    mpq_set(x->b,y->b);
+    mpq_set(x->c,y->c);
+    mpq_set(x->d,y->d);
+}
+
+void
 weight_qisq2_div(qisq2_t *x, qisq2_t *y)
 {
     //check if y is non-zero
     //assert(!(mpq_sgn(y->a)==0 || mpq_sgn(y->b)==0 || mpq_sgn(y->c)==0 || mpq_sgn(y->d)==0));
 
-    qisq2_t temp;
-    qisq2_t cc;
-    qisq2_t sc;
-    qisq2_init(&temp); 
-    qisq2_init(&cc); 
-    qisq2_init(&sc);
+    qisq2_t *temp;
+    qisq2_t *cc;
+    qisq2_t *sc;
+    temp = weight_qisq2_malloc();
+    qisq2_init(temp); 
+    cc = weight_qisq2_malloc();
+    sc = weight_qisq2_malloc();
+    qisq2_init(cc); 
+    qisq2_init(sc);
 
-    temp = *y;
+    weight_qisq2_set(temp,y);//*temp = *y; // ---> gaat dit goed??? Er moet een mpq_copy functie aangeroepen worden.
 
-    weight_qisq2_complexConjugate(&cc, &temp);
-    weight_qisq2_mul(&temp, &cc);
-    weight_qisq2_sqrttwoConjugate(&sc, &temp);
-    weight_qisq2_mul(&temp, &sc);
+    weight_qisq2_complexConjugate(cc, temp);
+    qisq2_mul_clear_input(temp, cc); 
+
+    weight_qisq2_sqrttwoConjugate(sc, temp);
+    qisq2_mul_clear_input(temp, sc); 
 
     // y is real fraction now
     // this can be checked with the following assertion (for debugging)
     //assert(mpq_cmp_ui(temp.b, 0, 1) == 0 && mpq_cmp_ui(temp.c, 0, 1) == 0 && mpq_cmp_ui(temp.d, 0, 1) == 0);
 
     // multiply numerator x with conjugates
-    weight_qisq2_mul(x, &cc);
-    weight_qisq2_mul(x, &sc);
 
-    qisq2_clear(&cc);
-    qisq2_clear(&sc);
+    weight_qisq2_mul(x, cc);
+    qisq2_mul_clear_input(x, sc);
+
+    qisq2_clear(cc);
+    qisq2_clear(sc);
+    free(cc);
+    free(sc);
 
     // calculate 1/y
-    mpq_inv(temp.a, temp.a);
+    mpq_inv(temp->a, temp->a);
 
-    weight_qisq2_mul(x, &temp);
-    qisq2_clear(&temp);
+    qisq2_mul_clear_input(x, temp);
+    qisq2_clear(temp);
+    free(temp);
 }
 
 bool
