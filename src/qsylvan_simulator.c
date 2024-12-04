@@ -1110,31 +1110,27 @@ qmdd_get_amplitude_qisq2(QMDD q, bool *x, BDDVAR nqubits)
     res_complex.r = mpq_get_d(res->a) + mpq_get_d(res->b)*SQRT2;
     res_complex.i = mpq_get_d(res->c) + mpq_get_d(res->d)*SQRT2;
     free(res);
-    //qisq2_clear(&res);
     return res_complex;
 }
 
 double
 qmdd_amp_to_prob_qisq2(AMP a)
 {
-    qisq2_t *c;
-    c = weight_qisq2_malloc();
-    //qisq2_init(&c);
-    weight_value(a, c);
-    weight_qisq2_abs_sqr(c);
-    double abs = mpq_get_d(c->a) + mpq_get_d(c->b)*SQRT2;
-    free(c);
-    //qisq2_clear(&c);
+    qisq2_t c;
+    weight_value(a, &c);
+     weight_qisq2_abs_sqr(&c);
+    double abs = mpq_get_d(c.a) + mpq_get_d(c.b)*SQRT2;
+    qisq2_clear(&c);
     return (abs);
 }
 
 AMP
 qmdd_amp_from_prob_qisq2(double a)
 {
-    qisq2_t c;
-    qisq2_init(&c);
-    mpq_set_d(c.a,flt_sqrt(a));
-    return weight_lookup(&c);
+    qisq2_t *c;
+    c = weight_qisq2_malloc();
+    mpq_set_d(c->a,flt_sqrt(a));
+    return weight_lookup(c);
 }
 
 double
