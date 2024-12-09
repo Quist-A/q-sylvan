@@ -1,0 +1,26 @@
+{
+  "measurement_results": {
+    "0000000000000000000000000000000000000000000000000000000000000000000000": 1
+  },
+  "statistics": {
+    "applied_gates": 1030,
+    "benchmark": "clifford_T_circuit_70_750",
+    "final_nodes": 11206,
+    "max_nodes": 11238,
+    "n_qubits": 70,
+    "norm": 1.00000e+00,
+    "reorder": 0,
+    "seed": 1733760404,
+    "shots": 1,
+    "simulation_time": 1.345459,
+    "tolerance": 1.00000e-14,
+    "wgt_inv_caching": 1,
+    "wgt_norm_strat": 0,
+    "wgt_type": 1,
+    "min_node_tab_size": 33554432,
+    "max_node_tab_size": 33554432,
+    "min_wgt_tab_size": 8388608,
+    "max_wgt_tab_size": 8388608,
+    "workers": 1
+  }
+}
