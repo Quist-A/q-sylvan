@@ -1,18 +1,18 @@
 {
   "measurement_results": {
-    "00000000000000000000": 1
+    "0000000000000000000000000000000000000000000000000000000000000000000000": 1
   },
   "statistics": {
-    "applied_gates": 1096,
-    "benchmark": "clifford_T_circuit_20_800",
-    "final_nodes": 1,
-    "max_nodes": 415372,
-    "n_qubits": 20,
-    "norm": 0.00000e+00,
+    "applied_gates": 1104,
+    "benchmark": "clifford_T_circuit_70_800",
+    "final_nodes": 60989,
+    "max_nodes": 157641,
+    "n_qubits": 70,
+    "norm": 1.00000e+00,
     "reorder": 0,
-    "seed": 1733816302,
+    "seed": 1733820705,
     "shots": 1,
-    "simulation_time": 7.408067,
+    "simulation_time": 1214.448833,
     "tolerance": 1.00000e-14,
     "wgt_inv_caching": 1,
     "wgt_norm_strat": 0,
