@@ -26,6 +26,7 @@ void weight_complex_div(complex_t *a, complex_t *b);
 bool weight_complex_eq(complex_t *a, complex_t *b);
 bool weight_complex_eps_close(complex_t *a, complex_t *b, double eps);
 bool weight_complex_greater(complex_t *a, complex_t *b);
+void weight_complex_copy(complex_t *a, complex_t *b);
 
 EVBDD_WGT wgt_complex_norm_L2(EVBDD_WGT *low, EVBDD_WGT *high);
 EVBDD_WGT wgt_complex_get_low_L2normed(EVBDD_WGT high);

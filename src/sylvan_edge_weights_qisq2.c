@@ -36,6 +36,14 @@ void qisq2_reduce(qisq2_t *num) {
     mpq_canonicalize(num->d);
 }
 
+void weight_qisq2_copy(qisq2_t *a, qisq2_t *a_copy){
+    qisq2_init(a_copy);
+    mpq_set(a_copy->a,a->a);
+    mpq_set(a_copy->b,a->b);
+    mpq_set(a_copy->c,a->c);
+    mpq_set(a_copy->d,a->d);
+}
+
 qisq2_t *
 weight_qisq2_malloc()
 {
