@@ -81,23 +81,31 @@ qisq2_hash(qisq2_t *num) {
     mpq_get_num(dnum, num->d);
     mpq_get_den(dden, num->d);
 
-    mpz_addmul_ui(temp, anum, 3443);
-    mpz_addmul_ui(temp, aden, 17);
-    mpz_addmul_ui(temp, bnum, 8093);
-    mpz_addmul_ui(temp, bden, 9);
-    mpz_addmul_ui(temp, cnum, 7314);
-    mpz_addmul_ui(temp, cden, 71);
-    mpz_addmul_ui(temp, dnum, 2817);
-    mpz_addmul_ui(temp, dden, 7);
-
+    // hash 0 and 1 to 0 resp. 1
+    if (!(mpz_cmp_si(anum,0) || mpz_cmp_si(bnum,0) || mpz_cmp_si(cnum,0) || mpz_cmp_si(dnum,0))){
+        result = 0;
+    }
+    else if (!(mpz_cmp_si(anum,1) || mpz_cmp_si(aden,1) || mpz_cmp_si(bnum,0) || mpz_cmp_si(cnum,0) || mpz_cmp_si(dnum,0))){
+        result = 1;
+    }
+    else {
+        mpz_addmul_ui(temp, anum, 3443);
+        mpz_addmul_ui(temp, aden, 17);
+        mpz_addmul_ui(temp, bnum, 8093);
+        mpz_addmul_ui(temp, bden, 9);
+        mpz_addmul_ui(temp, cnum, 7314);
+        mpz_addmul_ui(temp, cden, 71);
+        mpz_addmul_ui(temp, dnum, 2817);
+        mpz_addmul_ui(temp, dden, 7);
+        unsigned long int res = mpz_get_ui(temp);
+        result = (uint32_t) res;
+    }
+    
     mpz_clear(anum); mpz_clear(aden); 
     mpz_clear(bnum); mpz_clear(bden); 
     mpz_clear(cnum); mpz_clear(cden); 
     mpz_clear(dnum); mpz_clear(dden);
 
-    unsigned long int res = mpz_get_ui(temp);
-
-    result = (uint32_t) res;
     mpz_clear(temp);
 
     return result;
@@ -262,10 +270,22 @@ qisq2_map_free(void *dbs)
             /*
             // sanity check for debugging
             if (c!=(qisq2_hash(&(qisq2_map->table[c].c))& qisq2_map->mask)){
+                uint32_t hash = qisq2_hash(&(qisq2_map->table[c].c));
+                uint64_t ref = hash & qisq2_map->mask;
+                uint64_t line_end = (ref & CL_MASK) + CACHE_LINE_SIZE;
                 printf("ERROR: hash table failure \n");
-                printf("Hash value of entry is: %u \n", c);
+                uint64_t d = (uint64_t)c;
+                printf("Hash value of entry is: %ld \n", d);
                 printf("Hash value of entry should be: %ld \n", qisq2_hash(&(qisq2_map->table[c].c))& qisq2_map->mask);
+                printf("or equivalently: %d \n", hash);
                 qisq2_print(&(qisq2_map->table[c].c));
+                printf("line_end: %ld \n",line_end);
+                uint32_t prime = odd_primes[hash & PRIME_MASK];
+                printf("prime: %d \n",prime);
+                hash += prime << CACHE_LINE;
+                printf("new hash: %d \n", hash);
+                ref = hash & qisq2_map->mask;
+                printf("new ref: %ld \n", ref);
                 //exit(0);
             }
             */

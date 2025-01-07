@@ -46,6 +46,7 @@ weight_div_f 			weight_div;
 weight_eq_f 			weight_eq;
 weight_eps_close_f 		weight_eps_close;
 weight_greater_f		weight_greater;
+weight_copy_f		    weight_copy;
 
 wgt_norm_L2_f			wgt_norm_L2;
 wgt_get_low_L2normed_f	wgt_get_low_L2normed;
@@ -94,6 +95,7 @@ void init_edge_weight_functions(edge_weight_type_t edge_weight_type)
         weight_eq           = (weight_eq_f) &weight_complex_eq;
         weight_eps_close    = (weight_eps_close_f) &weight_complex_eps_close;
         weight_greater      = (weight_greater_f) &weight_complex_greater;
+        weight_copy         = (weight_copy_f) &weight_complex_copy;
         wgt_norm_L2         = (wgt_norm_L2_f) &wgt_complex_norm_L2;
         wgt_get_low_L2normed= (wgt_get_low_L2normed_f) &wgt_complex_get_low_L2normed;
         weight_fprint       = (weight_fprint_f) &weight_complex_fprint;
@@ -116,6 +118,7 @@ void init_edge_weight_functions(edge_weight_type_t edge_weight_type)
         weight_eq           = (weight_eq_f) &weight_qisq2_eq;
         weight_eps_close    = (weight_eps_close_f) &weight_qisq2_eps_close;
         weight_greater      = (weight_greater_f) &weight_qisq2_greater;
+        weight_copy         = (weight_copy_f) &weight_qisq2_copy;
         weight_fprint       = (weight_fprint_f) &weight_qisq2_fprint;
         break;
     default:
@@ -251,8 +254,11 @@ wgt_table_gc_keep(EVBDD_WGT a)
     // move from current (old) to new
     weight_t wa = weight_malloc();
     _weight_value(wgt_storage, a, wa);
-    EVBDD_WGT res = _weight_lookup_ptr(wa, wgt_storage_new);
+    weight_t wa_copy = weight_malloc();
+    weight_copy(wa,wa_copy);
+    EVBDD_WGT res = _weight_lookup_ptr(wa_copy, wgt_storage_new);
     free(wa);
+    free(wa_copy);
     return res;
 }
 

@@ -82,6 +82,7 @@ typedef void (*weight_div_f)(weight_t a, weight_t b); // a <-- a / b
 typedef bool (*weight_eq_f)(weight_t a, weight_t b); // returns true iff a == b
 typedef bool (*weight_eps_close_f)(weight_t a, weight_t b, double eps); // returns true iff dist(a,b) < eps
 typedef bool (*weight_greater_f)(weight_t a, weight_t b); // returns true iff |a| > |b|
+typedef void (*weight_copy_f)(weight_t a, weight_t b); // copies a into b
 
 /* Normalization methods */
 typedef EVBDD_WGT (*wgt_norm_L2_f)(EVBDD_WGT *low, EVBDD_WGT *high);
@@ -109,6 +110,7 @@ extern weight_div_f 		weight_div;
 extern weight_eq_f 			weight_eq;
 extern weight_eps_close_f 	weight_eps_close;
 extern weight_greater_f		weight_greater;
+extern weight_copy_f		weight_copy;
 
 extern wgt_norm_L2_f		wgt_norm_L2;
 extern wgt_get_low_L2normed_f		wgt_get_low_L2normed;

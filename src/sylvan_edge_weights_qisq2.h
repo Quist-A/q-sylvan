@@ -29,6 +29,7 @@ bool weight_qisq2_eps_close(qisq2_t *a, qisq2_t *b, double eps);
 bool weight_qisq2_greater(qisq2_t *a, qisq2_t *b);
 void weight_qisq2_complexConjugate(qisq2_t *result, qisq2_t *x);
 void weight_qisq2_sqrttwoConjugate(qisq2_t *result, qisq2_t *x);
+void weight_qisq2_copy(qisq2_t *a, qisq2_t *a_copy);
 
 void weight_qisq2_fprint(FILE *stream, qisq2_t *a);
 void weight_qisq2_print(qisq2_t *a);
