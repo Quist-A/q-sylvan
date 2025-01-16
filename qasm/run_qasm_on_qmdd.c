@@ -27,6 +27,7 @@
 static int workers = 1;
 static int rseed = 0;
 static bool count_nodes = false;
+static bool count_qisq2_size = false;
 static bool output_vector = false;
 static size_t min_tablesize = 1LL<<25;
 static size_t max_tablesize = 1LL<<25;
@@ -52,6 +53,7 @@ static struct argp_option options[] =
     {"tol", 't', "<tolerance>", 0, "Tolerance for deciding edge weights equal (default=1e-14)", 0},
     {"json", 'j', "<filename>", 0, "Write stats to given filename as json", 0},
     {"count-nodes", 'c', 0, 0, "Track maximum number of nodes", 0},
+    {"count-qisq-size", 'q', 0, 0, "Count the number of bits of the largest qisq value", 0},
     {"state-vector", 'v', 0, 0, "Also output the complete state vector", 0},
     {"node-tab-size", 1000, "<size>", 0, "log2 of max node table size (max 40)", 0},
     {"wgt-tab-size", 1001, "<size>", 0, "log2 of max edge weigth table size (max 30 (23 if node table >2^30))", 0},
@@ -91,6 +93,9 @@ parse_opt(int key, char *arg, struct argp_state *state)
         break;
     case 'c':
         count_nodes = true;
+        break;
+    case 'q':
+        count_qisq2_size = true;
         break;
     case 'v':
         output_vector = true;
@@ -136,6 +141,8 @@ typedef struct stats_s {
     uint64_t applied_gates;
     uint64_t final_nodes;
     uint64_t max_nodes;
+    uint64_t final_qisq_size;
+    uint64_t max_qisq_size;
     uint64_t shots;
     double simulation_time;
     double norm;
@@ -172,6 +179,8 @@ void fprint_stats(FILE *stream, quantum_circuit_t* circuit)
     fprintf(stream, "    \"benchmark\": \"%s\",\n", circuit->name);
     fprintf(stream, "    \"final_nodes\": %" PRIu64 ",\n", stats.final_nodes);
     fprintf(stream, "    \"max_nodes\": %" PRIu64 ",\n", stats.max_nodes);
+    fprintf(stream, "    \"final_qisq_size\": %" PRIu64 ",\n", stats.final_qisq_size);
+    fprintf(stream, "    \"max_qisq_size\": %" PRIu64 ",\n", stats.max_qisq_size);
     fprintf(stream, "    \"n_qubits\": %d,\n", circuit->qreg_size);
     fprintf(stream, "    \"norm\": %.5e,\n", stats.norm);
     fprintf(stream, "    \"reorder\": %d,\n", reorder_qubits);
@@ -397,8 +406,16 @@ void simulate_circuit(quantum_circuit_t* circuit)
             uint64_t count = evbdd_countnodes(state);
             if (count > stats.max_nodes) stats.max_nodes = count;
         }
+        if (count_qisq2_size) {
+            uint64_t count = evbdd_qisqsize(state);
+            if (count > stats.max_qisq_size) stats.max_qisq_size = count;
+        }
         op = op->next;
     }
+    if (count_qisq2_size) {
+        uint64_t count = evbdd_qisqsize(state);
+        if (count > stats.max_qisq_size) stats.final_qisq_size = count;
+    }    
     stats.simulation_time = wctime() - t_start;
     stats.final_state = state;
     stats.shots = 1;

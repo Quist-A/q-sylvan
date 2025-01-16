@@ -24,6 +24,8 @@
 #include <sylvan_evbdd.h>
 #include <sylvan_refs.h>
 
+#define max(x,y) (x > y ? x : y)
+
 static int granularity = 1; // operation cache access granularity
 
 
@@ -1028,6 +1030,38 @@ uint64_t
 evbdd_countnodes(EVBDD a)
 {
     uint64_t res = evbdd_nodecount_mark(a) + 1; // (+ 1 for terminal "node")
+    evbdd_unmark_rec(a);
+    return res;
+}
+
+
+/**
+ * Counts qisq size in the EVBDD by marking them.
+ */
+static uint64_t
+evbdd_qisqcount_mark(EVBDD a)
+{
+    if (EVBDD_TARGET(a) == EVBDD_TERMINAL){
+        EVBDD_WGT wgt = EVBDD_WEIGHT(a);
+        uint64_t size = qisq2_size(wgt_storage,wgt); 
+        return size;
+    } 
+    evbddnode_t n = EVBDD_GETNODE(EVBDD_TARGET(a));
+    if (evbddnode_getmark(n)) return 0;
+    evbddnode_setmark(n, 1);
+    EVBDD_WGT wgt = EVBDD_WEIGHT(a);
+    uint64_t size = qisq2_size(wgt_storage,wgt); 
+    uint64_t rec_low_size = evbdd_qisqcount_mark(evbddnode_getptrlow(n));
+    uint64_t rec_high_size = evbdd_qisqcount_mark(evbddnode_getptrhigh(n));
+    uint64_t tmp = max(rec_low_size,rec_high_size);
+    size = max(tmp,size);
+    return size;
+}
+
+uint64_t
+evbdd_qisqsize(EVBDD a)
+{
+    uint64_t res = evbdd_qisqcount_mark(a);
     evbdd_unmark_rec(a);
     return res;
 }

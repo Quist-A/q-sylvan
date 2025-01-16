@@ -296,6 +296,48 @@ qisq2_map_free(void *dbs)
     free (qisq2_map);
 }
 
+uint64_t
+qisq2_size(const void *dbs, const uint64_t ref)
+{
+    // return biggest number of bits used for some integer in qisq number ref
+    //
+    // More concrete: for qisq number anum/aden + ... + dnum/dden i sqrt(2)
+    // return maxsize(anum,aden,bnum,...,dden) 
+    qisq2_map_t * qisq2_map = (qisq2_map_t *) dbs;
+    qisq2_t *num = &(qisq2_map->table[ref].c);
+
+    mpz_t anum, aden, bnum, bden, cnum, cden, dnum, dden;
+    mpz_init(anum); mpz_init(aden); 
+    mpz_init(bnum); mpz_init(bden);
+    mpz_init(cnum); mpz_init(cden); 
+    mpz_init(dnum); mpz_init(dden);
+    uint64_t max_size = 0;
+
+    mpq_get_num(anum, num->a);
+    mpq_get_den(aden, num->a);
+    mpq_get_num(bnum, num->b);
+    mpq_get_den(bden, num->b);
+    mpq_get_num(cnum, num->c);
+    mpq_get_den(cden, num->c);
+    mpq_get_num(dnum, num->d);
+    mpq_get_den(dden, num->d);
+    max_size = max(mpz_sizeinbase(anum,2),max_size);
+    max_size = max(mpz_sizeinbase(aden,2),max_size);
+    max_size = max(mpz_sizeinbase(bnum,2),max_size);
+    max_size = max(mpz_sizeinbase(bden,2),max_size);
+    max_size = max(mpz_sizeinbase(cnum,2),max_size);
+    max_size = max(mpz_sizeinbase(cden,2),max_size);
+    max_size = max(mpz_sizeinbase(bnum,2),max_size);
+    max_size = max(mpz_sizeinbase(dden,2),max_size);
+
+    mpz_clear(anum); mpz_clear(aden); 
+    mpz_clear(bnum); mpz_clear(bden); 
+    mpz_clear(cnum); mpz_clear(cden); 
+    mpz_clear(dnum); mpz_clear(dden);
+
+    return max_size;
+}
+
 double
 qisq2_map_get_tolerance()
 {

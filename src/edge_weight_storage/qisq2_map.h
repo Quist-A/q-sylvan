@@ -68,6 +68,8 @@ extern void * qisq2_map_get(const void *dbs, const uint64_t ref);
 
 extern uint64_t qisq2_map_count_entries(const void *dbs);
 
+extern uint64_t qisq2_size(const void *dbs, const uint64_t ref);
+
 extern void qisq2_map_print_bitvalues(const void *dbs, const uint64_t ref);
 
 extern double qisq2_map_get_tolerance();
