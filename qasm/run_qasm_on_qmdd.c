@@ -414,7 +414,7 @@ void simulate_circuit(quantum_circuit_t* circuit)
     }
     if (count_qisq2_size) {
         uint64_t count = evbdd_qisqsize(state);
-        if (count > stats.max_qisq_size) stats.final_qisq_size = count;
+        stats.final_qisq_size = count;
     }    
     stats.simulation_time = wctime() - t_start;
     stats.final_state = state;
