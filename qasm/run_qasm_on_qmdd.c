@@ -28,6 +28,7 @@ static int workers = 1;
 static int rseed = 0;
 static bool count_nodes = false;
 static bool count_qisq2_size = false;
+static bool calc_measurement_prob = false;
 static bool output_vector = false;
 static size_t min_tablesize = 1LL<<25;
 static size_t max_tablesize = 1LL<<25;
@@ -54,6 +55,7 @@ static struct argp_option options[] =
     {"json", 'j', "<filename>", 0, "Write stats to given filename as json", 0},
     {"count-nodes", 'c', 0, 0, "Track maximum number of nodes", 0},
     {"count-qisq-size", 'q', 0, 0, "Count the number of bits of the largest qisq value", 0},
+    {"calc-measurement-prob", 'm', 0, 0, "Calculate the probability on a specific outcome of the final state", 0},
     {"state-vector", 'v', 0, 0, "Also output the complete state vector", 0},
     {"node-tab-size", 1000, "<size>", 0, "log2 of max node table size (max 40)", 0},
     {"wgt-tab-size", 1001, "<size>", 0, "log2 of max edge weigth table size (max 30 (23 if node table >2^30))", 0},
@@ -96,6 +98,9 @@ parse_opt(int key, char *arg, struct argp_state *state)
         break;
     case 'q':
         count_qisq2_size = true;
+        break;
+    case 'm':
+        calc_measurement_prob = true;
         break;
     case 'v':
         output_vector = true;
@@ -146,6 +151,8 @@ typedef struct stats_s {
     uint64_t shots;
     double simulation_time;
     double norm;
+    double normed_prob;
+    double unnormed_prob;
     QMDD final_state;
 } stats_t;
 stats_t stats;
@@ -183,6 +190,8 @@ void fprint_stats(FILE *stream, quantum_circuit_t* circuit)
     fprintf(stream, "    \"max_qisq_size\": %" PRIu64 ",\n", stats.max_qisq_size);
     fprintf(stream, "    \"n_qubits\": %d,\n", circuit->qreg_size);
     fprintf(stream, "    \"norm\": %.5e,\n", stats.norm);
+    fprintf(stream, "    \"unnormed_measurement_prob\": %.5e,\n", stats.unnormed_prob);
+    fprintf(stream, "    \"normed_measurement_prob\": %.5e,\n", stats.normed_prob);
     fprintf(stream, "    \"reorder\": %d,\n", reorder_qubits);
     fprintf(stream, "    \"seed\": %d,\n", rseed);
     fprintf(stream, "    \"shots\": %" PRIu64 ",\n", stats.shots);
@@ -415,12 +424,28 @@ void simulate_circuit(quantum_circuit_t* circuit)
     if (count_qisq2_size) {
         uint64_t count = evbdd_qisqsize(state);
         stats.final_qisq_size = count;
-    }    
+    }
     stats.simulation_time = wctime() - t_start;
     stats.final_state = state;
     stats.shots = 1;
     stats.final_nodes = evbdd_countnodes(state);
     stats.norm = qmdd_get_norm(state, circuit->qreg_size);
+
+    if (calc_measurement_prob){
+        srand(12345);
+        uint64_t k  = rand();
+        bool *x = int_to_bitarray(k, circuit->qreg_size, !(circuit->reversed_qubit_order));
+        complex_t c = qmdd_get_amplitude(stats.final_state, x, circuit->qreg_size);
+        stats.unnormed_prob = sqrt(c.r*c.r+c.r*c.i);
+        if (stats.norm != 0.0){
+            stats.normed_prob = stats.unnormed_prob/stats.norm;
+        }
+        else {
+            stats.normed_prob = 1e10;
+        }
+        free(x);
+        }
+
 }
 
 
