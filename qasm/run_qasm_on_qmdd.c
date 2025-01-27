@@ -153,6 +153,7 @@ typedef struct stats_s {
     double norm;
     double normed_prob;
     double unnormed_prob;
+    double first_qubit_prob;
     QMDD final_state;
 } stats_t;
 stats_t stats;
@@ -192,6 +193,7 @@ void fprint_stats(FILE *stream, quantum_circuit_t* circuit)
     fprintf(stream, "    \"norm\": %.5e,\n", stats.norm);
     fprintf(stream, "    \"unnormed_measurement_prob\": %.5e,\n", stats.unnormed_prob);
     fprintf(stream, "    \"normed_measurement_prob\": %.5e,\n", stats.normed_prob);
+    fprintf(stream, "    \"first_qubit_measurement_prob\": %.5e,\n", stats.first_qubit_prob);
     fprintf(stream, "    \"reorder\": %d,\n", reorder_qubits);
     fprintf(stream, "    \"seed\": %d,\n", rseed);
     fprintf(stream, "    \"shots\": %" PRIu64 ",\n", stats.shots);
@@ -444,7 +446,20 @@ void simulate_circuit(quantum_circuit_t* circuit)
             stats.normed_prob = 1e10;
         }
         free(x);
+    }
+    if (calc_measurement_prob){
+        EVBDD low_edge, high_edge;
+        evbddnode_t n = EVBDD_GETNODE(EVBDD_TARGET(state));
+        evbddnode_getchilderen(n,&low_edge,&high_edge);
+        double low_norm = qmdd_unnormed_prob(low_edge, 1, circuit->qreg_size);
+        double high_norm = qmdd_unnormed_prob(high_edge, 1, circuit->qreg_size);
+        if (low_norm != 0.0 || high_norm != 0.0){
+            stats.first_qubit_prob = low_norm/(low_norm+high_norm);
         }
+        else {
+            stats.first_qubit_prob = 1e10;
+        }
+    }
 
 }
 
